@@ -83,6 +83,9 @@ mkdir -p /etc/firefox/policies
 if [ -e "/etc/firefox/policies/policies.json" ]; then
   mv /etc/firefox/policies/policies.json /etc/firefox/policies/policies.json.backup
 fi
+
+INTERNAL_BASE_URL="$(echo $KIOSK_URL | cut -d'/' -f1,2,3)"
+
 cat > /etc/firefox/policies/policies.json << EOF
 {
         "policies": {
@@ -164,6 +167,13 @@ cat > /etc/firefox/policies/policies.json << EOF
                         "MoreFromMozilla": false,
                         "FirefoxLabs": false,
                         "Locked": true
+                },
+                "Permissions": {
+                        "Autoplay": {
+                                "Allow": ["$INTERNAL_BASE_URL"],
+                                "BlockNewRequests": true,
+                                "Locked": true
+                        }
                 }
         }
 }
@@ -190,7 +200,8 @@ killall zenity &
 while :
 do
   xrandr --auto
-  firefox-esr --kiosk --private-window --disable-pinch $KIOSK_URL
+#  firefox-esr --kiosk --private-window --disable-pinch $KIOSK_URL    # The "--private-window" option disables the autoplay permission, but the policies disable any saving of personal data and autofill functionality anyway so this can be skipped (still, be careful)
+  firefox-esr --kiosk --disable-pinch $KIOSK_URL
   sleep 5
 done &
 EOF
